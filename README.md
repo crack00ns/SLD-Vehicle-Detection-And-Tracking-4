@@ -79,31 +79,31 @@ Once we have model training complete, we can use a sliding window approach where
 To detect vehicles and remove false positives on a single frame we use a sliding window approach on different scales and construct a heatmap with all the pixels where multiple detections were detected. Only the lower half of the image was searched (`Y_START:400` and `Y_END:700`). Finally we apply a threshold on heatmap (`HEAT_MAP_THRESHLD:2`) to find the locations where possibility of having a car is very high. This is implemented in `detect_cars_frame()` function in the class `VehicleDetector`. We used `scipy.ndimage.measurements.label()` to isolate and locate individual cars and draw a bounding box across each detected car assuming each blob correspond to one car. The results on test images seem very accurate as shown below:
 
 ![alt text][image6]
-*Output on Test Image 1*
+*Output with Test Image 1*
 ---
 ![alt text][image7]
-*Output on Test Image 2*
+*Output with Test Image 2*
 ---
 ![alt text][image8]
-*Output on Test Image 3*
+*Output with Test Image 3*
 ---
 ![alt text][image9]
-*Output on Test Image 4*
+*Output with Test Image 4*
 ---
 ![alt text][image10]
-*Output on Test Image 5*
+*Output with Test Image 5*
 ---
 ![alt text][image11]
-*Output on Test Image 6*
+*Output with Test Image 6*
 ---
 *Result of Heatmap Thresholding on test images to detect and draw bounding boxes across car images*
 Next, we discuss our approach to smoothen detection across successive frames.
 
 ### 4. Smoothening the successive frames
 ---
-The above pipeline can be applied to a video stream and while the results are promising, the bounding boxes seem a bit jittery and we some false positives very rarely. To smoothen and streamline the detection across successive frames, I used an **exponential smoothening** technique on both bounding boxes and the detected heatmap. I added two additonal boolean/binary flags in `VehicleDetector` class called `smoothen_heatmap` and `smoothen_frame_boxes`. Also added two variables that store boxes and heatmap found on previous frames called `prev_boxes` and `prev_heatmap`. 
+The above pipeline can be applied to a video stream and while the results are promising, the bounding boxes seem a bit jittery and sometimes we noticed a few false positives. To smoothen and streamline the detection across successive frames, I used an **exponential smoothening** technique on both bounding boxes and the detected heatmap. I added two additonal boolean/binary flags in `VehicleDetector` class called `smoothen_heatmap` and `smoothen_frame_boxes`. Also added two variables that store boxes and heatmap found on previous frames called `prev_boxes` and `prev_heatmap`. 
 ##### Box Smoothening
-Once we have labeled boxes on a single video frame. We iterate over all the boxes found in the previous frame and if the centers of any two boxes are within a threshold (`CENTER_CLOSE_THRESHOLD:10`), we assume that the two boxes are essentially indentifying the same car. So we take a moving average of the centers, length and width of the new box with a moving average factor (`MOV_AVG_FACTOR:0.5`) e.g. `new_length_box=mov_avg_factor*current_length+(1-mov_avg_factor)*previous_length`. The code is implemented in `centers_are_close()`, `moving_average_boxes()`, `average_recenter_box()` in the `VehicleDetector` class. The code snippet is shown below:
+Once we have labeled boxes on a single video frame. We iterate over all the boxes found in the previous frame and if the centers of any two boxes are within a threshold (`CENTER_CLOSE_THRESHOLD:10`), we assume that the two boxes are essentially pointing at the same car. So we take a moving average of the centers, length and width of the new box with a moving average factor (`MOV_AVG_FACTOR:0.5`) e.g. `new_length_box=mov_avg_factor*current_length+(1-mov_avg_factor)*previous_length`. The code is implemented in `centers_are_close()`, `moving_average_boxes()`, `average_recenter_box()` in the `VehicleDetector` class. The code snippet is shown below:
 ```
     def centers_are_close(self, center1, center2):
         ''' Check if centers of two bounding boxes (in successive frames) are similar within a threshold, 
@@ -172,6 +172,6 @@ As seen in the videos, box jitteriness has significantly reduced and bounding bo
 
 ### Discussion and Issues Faced
 I think the project was quite interesting and challenging at many fronts. Also, there are multiple ways available to implement this project with different trade-offs so this was a great learning opportunity to explore options. Here is a brief discussion on some issues:
-1. **Feature Vector Selection**: The current approach is slow (takes almost 2.5 seconds on single image and ~40 mins to process the project video). Feature extraction seem to be the main bottleneck since model prediction is quite fast. However, speed can obviously be increased at the expense of accuracy. I went for accuracy rather than speed but also explored options to reduce feature vector size. First of all, we can possibly get rid of spatial bins and color histograms since they bring little information and increased processing. Also HOG channels Cr and Cb also seem to carry less information about car shapes for many images. By keeping only HOG channel 0, I seem to get an accuracy of 98% which is high but results in lot of false positives and missed detection, therefore more a robust threholding approach if employed can improve the speed significantly.
-2. **Labeling Cars**: With the box smoothening approach, discussed above cars it is also possible to label cars when the same boxes are detected in successive frames. I didn't implement it but it can be done but wont be very robust. Color histograms may provide a clue to approach this.  
+1. **Feature Vector Selection**: The current approach is slow (takes almost 2.5 seconds on single image and ~40 mins to process the project video). Feature extraction seem to be the main bottleneck since model prediction is quite fast. However, speed can obviously be increased at the expense of accuracy. I went for accuracy rather than speed but also explored options to reduce feature vector size. First of all, we can possibly get rid of spatial bins and color histograms since they bring little information and increased processing. Also HOG channels Cr and Cb also seem to carry less information about car shapes for many images. By keeping only HOG channel 0, I seem to get an accuracy of 98% which is high but results in some false positives and missed detection. A more robust threholding approach if employed can improve the speed significantly.
+2. **Labeling Cars**: With the box smoothening approach, as discussed above, it is also possible to label cars when the same boxes are detected in successive frames. I didn't implement it but it can be done but probably wont be very robust. Color histograms may provide a clue to approach this.  
 3. **Deep Learning Approach**: While the current approach seems to work quite well, a CNN based approach could be way more robust but would provide less transparency. Since, I wanted to try more traditional approaches for my own learning experience, I used an SVM based approach. I plan to reimplement this project later using deep learning (Fast R-CNN, or other segmentation approaches disusses in CS231 class at Stanford).
