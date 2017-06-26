@@ -28,7 +28,12 @@ The goals / steps of this project are the following:
 
 ---
 ## Project code
-All main part of code for this project is implemented in `./vdutils.py` file. The IPython notebook `./vehicle_detection.ipynb` has a streamlined code showing how to run the code from `vdutils.py` on a sample image and video files. Heatmap visualization images can be obtained by setting `vis` parameter in `VehicleDetector` object to be `True`. All the generated images are stored in `output` folder.
+All main part of code for this project is implemented in `./vdutils.py` file. The IPython notebook `./vehicle_detection.ipynb` has a streamlined code showing how to run the code from `vdutils.py` on a sample image and video files. Heatmap visualization images can be obtained by setting `vis` parameter in `VehicleDetector` object to be `True`. All the generated images are stored in `output` folder. The dataset can be downloaded and put in dataset/vehicles and dataset/non-vehicles folders respectively:
+https://s3.amazonaws.com/udacity-sdc/Vehicle_Tracking/vehicles.zip
+https://s3.amazonaws.com/udacity-sdc/Vehicle_Tracking/non-vehicles.zip
+
+Project video project_video.mp4 can be downloaded from here:
+https://github.com/udacity/CarND-Vehicle-Detection
 
 ### 1. Feature Extraction
 ---
